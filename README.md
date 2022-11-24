@@ -1,0 +1,2 @@
+# AutoGUIGenerator
+ プログラムを外部から操作するのに必要なGUIを自動で作成する
