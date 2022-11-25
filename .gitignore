@@ -1,5 +1,6 @@
 *.yml
 src/tk_params
+src/not_authorized_for_redistribution
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
