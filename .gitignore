@@ -1,6 +1,8 @@
 *.yml
-src/tk_params
-src/not_authorized_for_redistribution
+*.pkl
+tk_params/
+src/guigen/not_authorized_for_redistribution
+*/実装中.ipynb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
