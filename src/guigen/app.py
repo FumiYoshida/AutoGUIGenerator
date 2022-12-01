@@ -1,0 +1,229 @@
+import tkinter as tk
+
+from matplotlib import pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.animation import FuncAnimation
+
+from utils.scheduler import Scheduler
+
+class Application(tk.Tk):
+    def __init__(self, calculator_main, calculator_dt=50, visualizer_dt=50, title='GUI App'):
+        """
+        GUIを実行しつつ、要求された値に対応するウィジェットを適宜追加する
+        
+        Parameters
+        ----------
+        calculator_main: callable
+            一定時間ごとに実行したい計算
+        calculator_dt: float, optional
+            calculator_main 関数の実行間隔[ms]
+        visualizer_dt: float, optional
+            グラフの更新間隔[ms]
+        title: str, optional
+            GUIのタイトル
+        """
+        super().__init__()
+        self.scheduler = Scheduler(tasks=[calculator_main], interval_sec=calculator_dt * 1.0e-3)
+        
+        self.title(title)
+        
+        # 画面をグラフを配置する場所とボタン等を配置する場所に分ける
+        self.canvas_frame = tk.Frame(self)
+        self.canvas_frame.pack(side=tk.LEFT)
+        self.control_frame = tk.Frame(self)
+        self.control_frame.pack(side=tk.RIGHT)
+        
+        #self.figures = {}
+        self.sliders = {}
+        self.toggle_buttons = {}
+        self.buttons = {}
+        
+        # TODO: 配布しても問題ない画像を作成してgithubにあげる
+        self.on_image = tk.PhotoImage(file = "./not_authorized_for_redistribution/toggle_on_transparent.png").subsample(5)
+        self.off_image = tk.PhotoImage(file = "./not_authorized_for_redistribution/toggle_off_transparent.png").subsample(5)
+        
+        self.dt = visualizer_dt # グラフの更新間隔
+        
+    def start(self):
+        self.scheduler.start()
+        self.mainloop()
+
+    def add_figure(self, name, init_anim, update_anim):
+        self.figure = Figure(self, name, init_anim, update_anim)
+        
+    def _add_slider(self, name, from_=0, to=1, resolution=None, default=None):
+        self.sliders[name] = Slider(self, name, from_, to, resolution, default)
+        
+    def _add_toggle_button(self, name):
+        self.toggle_buttons[name] = ToggleButton(self, name, self.on_image, self.off_image)
+        
+    def _add_button(self, name, on_click):
+        self.buttons[name] = Button(self, name, on_click)
+        
+    def get_float(self, key, from_=0, to=1, resolution=None, default=None):
+        """
+        GUIのスライダーからfloatを取得する
+        
+        Parameters
+        ----------
+        key: str
+            項目名
+        from_: float, default=0
+            スライダーの最小値
+        to: float, default=1
+            スライダーの最大値
+        resolution: float, optional
+            スライダーの解像度
+        default: float, optional
+            まだGUIにスライダーを追加していないときに返す値
+            指定がなければスライダー追加前はfrom_が返る
+        """
+        if key in self.sliders:
+            # GUIにすでにウィジェットがあったら
+            return self.sliders[key].var.get()
+        else:
+            # GUIにまだウィジェットがなかったら
+            # ウィジェットを追加しつつ、今回はデフォルト値を返す
+            self._add_slider(
+                name=key,
+                from_=from_,
+                to=to,
+                resolution=resolution,
+                default=default,
+            )
+            # 以下をdefault or from_ にするとdefault=0, from_を-1とかにしたときに-1が返ってきてしまう
+            return from_ if default is None else default 
+        
+    def get_bool(self, key, default=None):
+        """
+        GUIのトグルボタンからboolを取得する
+        
+        Parameters
+        ----------
+        key: str
+            項目名
+        default: bool, optional
+            まだGUIにトグルボタンを追加していないときに返す値
+            デフォルトはFalse
+        """
+        if key in self.toggle_buttons:
+            return self.toggle_buttons[key].is_on
+        else:
+            self._add_toggle_button(key)
+            return default or False    
+    
+    @staticmethod
+    def function_name(func):
+        """関数に一意な名前を付ける"""
+        if hasattr(func, "__self__"):
+            # クラスメソッドのとき
+            # クラス名.関数名　を返す
+            class_name = func.__self__.__class__.__name__
+            return f"{class_name}.{func.__name__}"
+        else:
+            # クラスメソッドでないとき
+            return func.__name__
+    
+    def button(self, func):
+        """
+        GUIにボタンを追加し、
+        ボタンが押されたら関数を実行するよう登録する
+        """
+        # GUIにボタンを追加
+        key = self.function_name(func)
+        self._add_button(key, func)
+
+class Figure:
+    def __init__(self, app, name, init_anim, update_anim):
+        self.app = app
+        self.name = name
+        
+        self.fig = plt.figure(figsize=(5, 5))
+        self.ax = self.fig.add_subplot(111)
+        self.canvas = FigureCanvasTkAgg(self.fig, self.app.canvas_frame)
+        self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        
+        self.init_anim = lambda : init_anim(self.ax)
+        self.update_anim = update_anim
+        
+        self.ani = None
+        self.draw_plot()
+        
+    def draw_plot(self, event=None):
+           # すでにアニメーションが実行されている場合はevent_source.stopで停止
+        if self.ani is not None:
+            self.ani.event_source.stop()
+            self.ax.clear()
+
+        self.ani = FuncAnimation(
+              self.fig,  # Figureオブジェクト
+              self.update_anim,  # グラフ更新関数
+              init_func=self.init_anim,  # 初期化関数
+              interval = self.app.dt,  # 更新間隔(ms)
+              blit = True,
+        )
+        self.canvas.draw()
+        
+class Widget:
+    def __init__(self, app, name):
+        self.app = app
+        self.name = name
+        
+        # 枠の作成
+        self.frame = tk.Frame(app.control_frame, bd=1, relief=tk.SUNKEN)
+        self.frame.pack(fill=tk.X)
+    
+        # 説明テキストの作成
+        self.control_label = tk.Label(self.frame, text=self.name)
+        self.control_label.pack(side='left')
+        
+class Slider(Widget):
+    def __init__(self, app, name, from_=0, to=1, resolution=None, default=None):
+        super().__init__(app, name)
+        
+        self.var = tk.DoubleVar()
+        self.x_scale = tk.Scale(
+            self.frame,
+            variable=self.var,
+            from_=from_,
+            to=to,
+            resolution=(to - from_) * 0.01 if resolution is None else resolution,
+            orient=tk.HORIZONTAL,
+        )
+        self.x_scale.pack(anchor=tk.E)
+        
+class ToggleButton(Widget):
+    def __init__(self, app, name, on_image, off_image):
+        super().__init__(app, name)
+        self.on_image = on_image
+        self.off_image = off_image
+        self.is_on = False
+        
+        self.button = tk.Button(
+            self.frame, 
+            image = off_image, 
+            relief='sunken', 
+            bd = 0, 
+            command = self.switch
+        )
+        self.button.pack(anchor=tk.E)
+    
+    def switch(self):
+        if self.is_on:
+            self.button.config(image = self.off_image)
+            self.is_on = False
+        else:
+            self.button.config(image = self.on_image)
+            self.is_on = True
+            
+
+class Button(Widget):
+    def __init__(self, app, name, on_click):
+        super().__init__(app, name)
+        
+        self.button = tk.Button(
+            self.frame, 
+            text=self.name,
+            command = on_click
+        )
+        self.button.pack(anchor=tk.E)
