@@ -1,10 +1,11 @@
 import tkinter as tk
+from pathlib import Path
 
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.animation import FuncAnimation
 
-from utils.scheduler import Scheduler
+from .utils.scheduler import Scheduler
 
 class Application(tk.Tk):
     def __init__(self, calculator_main, calculator_dt=50, visualizer_dt=50, title='GUI App'):
@@ -38,9 +39,8 @@ class Application(tk.Tk):
         self.toggle_buttons = {}
         self.buttons = {}
         
-        # TODO: 配布しても問題ない画像を作成してgithubにあげる
-        self.on_image = tk.PhotoImage(file = "./button_image/toggle_on.png").subsample(5)
-        self.off_image = tk.PhotoImage(file = "./button_image/toggle_off.png").subsample(5)
+        self.on_image = tk.PhotoImage(file = Path(__file__).parent / "button_image/toggle_on.png").subsample(5)
+        self.off_image = tk.PhotoImage(file = Path(__file__).parent / "button_image/toggle_off.png").subsample(5)
         
         self.dt = visualizer_dt # グラフの更新間隔
         
@@ -216,7 +216,6 @@ class ToggleButton(Widget):
             self.button.config(image = self.on_image)
             self.is_on = True
             
-
 class Button(Widget):
     def __init__(self, app, name, on_click):
         super().__init__(app, name)
