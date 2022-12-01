@@ -39,8 +39,8 @@ class Application(tk.Tk):
         self.buttons = {}
         
         # TODO: 配布しても問題ない画像を作成してgithubにあげる
-        self.on_image = tk.PhotoImage(file = "./not_authorized_for_redistribution/toggle_on_transparent.png").subsample(5)
-        self.off_image = tk.PhotoImage(file = "./not_authorized_for_redistribution/toggle_off_transparent.png").subsample(5)
+        self.on_image = tk.PhotoImage(file = "./button_image/toggle_on.png").subsample(5)
+        self.off_image = tk.PhotoImage(file = "./button_image/toggle_off.png").subsample(5)
         
         self.dt = visualizer_dt # グラフの更新間隔
         
@@ -144,7 +144,7 @@ class Figure:
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         
         self.init_anim = lambda : init_anim(self.ax)
-        self.update_anim = update_anim
+        self.update_anim = lambda dt: update_anim(self.ax, dt)
         
         self.ani = None
         self.draw_plot()
@@ -160,7 +160,7 @@ class Figure:
               self.update_anim,  # グラフ更新関数
               init_func=self.init_anim,  # 初期化関数
               interval = self.app.dt,  # 更新間隔(ms)
-              blit = True,
+              blit = False#True,
         )
         self.canvas.draw()
         

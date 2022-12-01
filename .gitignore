@@ -1,8 +1,7 @@
 *.yml
 *.pkl
-tk_params/
-src/guigen/not_authorized_for_redistribution
-*/実装中.ipynb
+src/guigen/discard_code
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
