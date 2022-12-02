@@ -1,11 +1,13 @@
 import tkinter as tk
 from pathlib import Path
+from threading import Lock
 
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.animation import FuncAnimation
 
 from .utils.scheduler import Scheduler
+
 
 class Application(tk.Tk):
     def __init__(self, calculator_main, calculator_dt=50, visualizer_dt=50, title='GUI App'):
@@ -35,30 +37,49 @@ class Application(tk.Tk):
         self.control_frame.pack(side=tk.RIGHT)
         
         #self.figures = {}
+        self.figure = None
         self.sliders = {}
         self.toggle_buttons = {}
         self.buttons = {}
+        self.texts = {}
         
         self.on_image = tk.PhotoImage(file = Path(__file__).parent / "button_image/toggle_on.png").subsample(5)
         self.off_image = tk.PhotoImage(file = Path(__file__).parent / "button_image/toggle_off.png").subsample(5)
         
         self.dt = visualizer_dt # グラフの更新間隔
         
+        self._lock = Lock() # 
+        
     def start(self):
         self.scheduler.start()
         self.mainloop()
 
     def add_figure(self, name, init_anim, update_anim):
-        self.figure = Figure(self, name, init_anim, update_anim)
+        with self._lock:
+            if self.figure is None:
+                self.figure = Figure(self, name, init_anim, update_anim)
         
     def _add_slider(self, name, from_=0, to=1, resolution=None, default=None):
-        self.sliders[name] = Slider(self, name, from_, to, resolution, default)
+        with self._lock:
+            if name not in self.sliders:
+                self.sliders[name] = Slider(self, name, from_, to, resolution, default)
         
     def _add_toggle_button(self, name):
-        self.toggle_buttons[name] = ToggleButton(self, name, self.on_image, self.off_image)
+        with self._lock:
+            if name not in self.toggle_buttons:
+                self.toggle_buttons[name] = ToggleButton(self, name, self.on_image, self.off_image)
         
     def _add_button(self, name, on_click):
-        self.buttons[name] = Button(self, name, on_click)
+        with self._lock:
+            if name not in self.buttons:
+                self.buttons[name] = Button(self, name, on_click)
+        
+    def text(self, name, text=""):
+        with self._lock:
+            if name in self.texts:
+                self.texts[name].set_text(text)
+            else:
+                self.texts[name] = Text(self, name, text)
         
     def get_float(self, key, from_=0, to=1, resolution=None, default=None):
         """
@@ -226,3 +247,16 @@ class Button(Widget):
             command = on_click
         )
         self.button.pack(anchor=tk.E)
+        
+class Text(Widget):
+    def __init__(self, app, name, s=""):
+        super().__init__(app, name)
+        self.text = tk.StringVar(value=s)
+        self.label = tk.Label(
+            self.frame,
+            textvariable = self.text,
+        )
+        self.label.pack(anchor=tk.E)
+        
+    def set_text(self, s):
+        self.text.set(s)
