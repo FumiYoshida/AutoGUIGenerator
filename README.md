@@ -1,5 +1,5 @@
-<p align="center"><img width=12.5% src="/media/logo.png"></p>
-<p align="center"><img width=60% src="/media/name.png"></p>
+<p align="center"><img width=12.5% src="/media/logo_guigen.png"></p>
+<h1><p align="center">AutoGUIGenerator</p></h1>
 
 <p align="center">
  <img src="https://img.shields.io/badge/python-v3.9+-blue.svg">
@@ -75,4 +75,3 @@ A toggle button is automatically added to the GUI.
 
 ## Further Examples
 - [metronome](test/metronome.ipynb)
-<img width=60% src="/media/metronome_example.png">
