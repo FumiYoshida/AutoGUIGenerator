@@ -73,5 +73,12 @@ bool_entered_by_user_via_GUI = self.app.get_bool('name_of_bool', DEFAULT_VALUE)
 ```
 A toggle button is automatically added to the GUI.
 
+### Add text to GUI
+```python
+# in the main function above
+self.app.text('name_of_text', TEXT)
+```
+If name is the same as previously entered, the corresponding text label is updated.
+
 ## Further Examples
 - [metronome](test/metronome.ipynb)
