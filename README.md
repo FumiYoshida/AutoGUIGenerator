@@ -32,7 +32,7 @@ class YourClass:
         # add figure to GUI if you need
         self.app.add_figure('your_figure_name', self.init_anim, self.update_anim)
         
-        # add button to GUI if you need
+        # add button(s) to GUI if you need
         self.app.button(self.some_function_fire_at_push_of_button)
         
         # start tkinter mainloop
@@ -51,7 +51,7 @@ class YourClass:
         pass
         
     def some_function_fire_at_push_of_button(self):
-        # define your function(s) to fire when button(s) is (are) pressed
+        # define your function to fire when button is pressed
         pass
 ```
 
