@@ -42,11 +42,11 @@ class YourClass:
         # define your function to execute periodically
         pass
         
-    def init_anim(self):
+    def init_anim(self, ax):
         # define your function to initialize figure
         pass
         
-    def update_anim(self):
+    def update_anim(self, dt, ax):
         # define your function to update figure
         pass
         
