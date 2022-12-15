@@ -27,6 +27,7 @@ class Application(tk.Tk):
         """
         super().__init__()
         self.scheduler = Scheduler(tasks=[calculator_main], interval_sec=calculator_dt * 1.0e-3)
+        self.protocol("WM_DELETE_WINDOW", self._stop_and_destroy) # ウィンドウが閉じられるときにループを止める
         
         self.title(title)
         
@@ -48,7 +49,11 @@ class Application(tk.Tk):
         
         self.dt = visualizer_dt # グラフの更新間隔
         
-        self._lock = Lock() # 
+        self._lock = Lock() 
+        
+    def _stop_and_destroy(self):
+        self.scheduler.stop()
+        self.destroy()
         
     def start(self):
         self.scheduler.start()
