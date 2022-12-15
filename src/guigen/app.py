@@ -182,11 +182,11 @@ class Figure:
             assert callable(update_anim)
             self.update_anim = lambda dt: update_anim(dt, self.ax)
         
-    #def init_anim(self):
-    #    pass
+    def init_anim(self):
+        pass
     
-    #def update_anim(self, dt):
-    #    pass
+    def update_anim(self, dt):
+        pass
         
     def register_app(self, app):
         self.app = app
