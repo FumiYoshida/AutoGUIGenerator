@@ -59,10 +59,18 @@ class Application(tk.Tk):
         self.scheduler.start()
         self.mainloop()
 
-    def add_figure(self, name, init_anim, update_anim):
+    def add_figure(self, figure):
         with self._lock:
             if self.figure is None:
-                self.figure = Figure(self, name, init_anim, update_anim)
+                assert isinstance(figure, Figure)
+                self.figure = figure
+                self.figure.register_app(self)
+                
+    def add_figure_from_func(self, init_anim, update_anim):
+        with self._lock:
+            if self.figure is None:
+                self.figure = Figure(init_anim, update_anim)
+                self.figure.register_app(self)
         
     def _add_slider(self, name, from_=0, to=1, resolution=None, default=None):
         with self._lock:
@@ -160,19 +168,29 @@ class Application(tk.Tk):
         self._add_button(key, func)
 
 class Figure:
-    def __init__(self, app, name, init_anim, update_anim):
-        self.app = app
-        self.name = name
-        
+    def __init__(self, init_anim=None, update_anim=None):
         self.fig = plt.figure(figsize=(5, 5))
         self.ax = self.fig.add_subplot(111)
+        self.ani = None
+        
+        if init_anim is not None:
+            assert callable(init_anim)
+            self.init_anim = lambda : init_anim(self.ax)
+            
+        if update_anim is not None:
+            assert callable(update_anim)
+            self.update_anim = lambda dt: update_anim(dt, self.ax)
+        
+    def init_anim(self):
+        pass
+    
+    def update_anim(self, dt):
+        pass
+        
+    def register_app(self, app):
+        self.app = app
         self.canvas = FigureCanvasTkAgg(self.fig, self.app.canvas_frame)
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-        
-        self.init_anim = lambda : init_anim(self.ax)
-        self.update_anim = lambda dt: update_anim(self.ax, dt)
-        
-        self.ani = None
         self.draw_plot()
         
     def draw_plot(self, event=None):
