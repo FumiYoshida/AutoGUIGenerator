@@ -32,10 +32,10 @@ class Application(tk.Tk):
         self.title(title)
         
         # 画面をグラフを配置する場所とボタン等を配置する場所に分ける
-        self.canvas_frame = tk.Frame(self)
-        self.canvas_frame.pack(side=tk.LEFT)
         self.control_frame = tk.Frame(self)
         self.control_frame.pack(side=tk.RIGHT)
+        self.canvas_frame = tk.Frame(self, bg='yellow')
+        self.canvas_frame.pack(expand=1, fill=tk.BOTH)#(side=tk.LEFT + tk.RIGHT)
         
         #self.figures = {}
         self.figure = None
@@ -66,10 +66,10 @@ class Application(tk.Tk):
                 self.figure = figure
                 self.figure.register_app(self)
                 
-    def add_figure_from_func(self, init_anim, update_anim):
+    def add_figure_from_func(self, init_anim, update_anim, blit=False):
         with self._lock:
             if self.figure is None:
-                self.figure = Figure(init_anim, update_anim)
+                self.figure = Figure(init_anim, update_anim, blit)
                 self.figure.register_app(self)
         
     def _add_slider(self, name, from_=0, to=1, resolution=None, default=None):
@@ -168,10 +168,11 @@ class Application(tk.Tk):
         self._add_button(key, func)
 
 class Figure:
-    def __init__(self, init_anim=None, update_anim=None):
+    def __init__(self, init_anim=None, update_anim=None, blit=False):
         self.fig = plt.figure(figsize=(5, 5))
         self.ax = self.fig.add_subplot(111)
         self.ani = None
+        self.blit = blit
         
         if init_anim is not None:
             assert callable(init_anim)
@@ -181,11 +182,11 @@ class Figure:
             assert callable(update_anim)
             self.update_anim = lambda dt: update_anim(dt, self.ax)
         
-    def init_anim(self):
-        pass
+    #def init_anim(self):
+    #    pass
     
-    def update_anim(self, dt):
-        pass
+    #def update_anim(self, dt):
+    #    pass
         
     def register_app(self, app):
         self.app = app
@@ -204,7 +205,7 @@ class Figure:
               self.update_anim,  # グラフ更新関数
               init_func=self.init_anim,  # 初期化関数
               interval = self.app.dt,  # 更新間隔(ms)
-              blit = False#True,
+              blit = self.blit,
         )
         self.canvas.draw()
         
