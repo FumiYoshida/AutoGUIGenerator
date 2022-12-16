@@ -19,12 +19,17 @@ class Scheduler:
         
     def schedule(self):
         """任意の処理を定期的に実行する"""
+        while not self.should_stop:
+            time_manager.wait_if_pace_too_fast(self.interval_sec)
+            self.exec_all_tasks()
         
+        """
         # 必要以上にスレッドが生成されないようにスレッドプールを使う
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             while not self.should_stop:
                 time_manager.wait_if_pace_too_fast(self.interval_sec)
                 future = executor.submit(self.exec_all_tasks)
+        """
     
     def register(self, task):
         self.tasks.append(task)
