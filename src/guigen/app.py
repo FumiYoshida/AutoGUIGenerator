@@ -82,10 +82,11 @@ class Application(tk.Tk):
             if name not in self.toggle_buttons:
                 self.toggle_buttons[name] = ToggleButton(self, name, self.on_image, self.off_image)
         
-    def _add_button(self, name, on_click):
+    def _add_button(self, **kwargs):
         with self._lock:
+            name = kwargs['func_name']
             if name not in self.buttons:
-                self.buttons[name] = Button(self, name, on_click)
+                self.buttons[name] = Button(self, **kwargs)
         
     def text(self, name, text=""):
         with self._lock:
@@ -158,14 +159,17 @@ class Application(tk.Tk):
             # クラスメソッドでないとき
             return func.__name__
     
-    def button(self, func):
+    def button(self, func, name=None):
         """
         GUIにボタンを追加し、
         ボタンが押されたら関数を実行するよう登録する
         """
         # GUIにボタンを追加
-        key = self.function_name(func)
-        self._add_button(key, func)
+        self._add_button(
+            func_name=self.function_name(func),
+            on_click=func,
+            button_name=name,
+        )
 
 class Figure:
     def __init__(self, init_anim=None, update_anim=None, blit=False):
@@ -262,12 +266,14 @@ class ToggleButton(Widget):
             self.is_on = True
             
 class Button(Widget):
-    def __init__(self, app, name, on_click):
-        super().__init__(app, name)
+    def __init__(self, app, func_name, on_click, button_name=None):
+        super().__init__(app, func_name)
         
+        if button_name is None:
+            button_name = func_name
         self.button = tk.Button(
             self.frame, 
-            text=self.name,
+            text=button_name,
             command = on_click
         )
         self.button.pack(anchor=tk.E)
