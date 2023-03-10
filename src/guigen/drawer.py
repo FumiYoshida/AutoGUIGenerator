@@ -41,6 +41,10 @@ class TimeDeque:
     
     def __len__(self):
         return len(self.values)
+    
+    def __iter__(self):
+        self.refresh()
+        yield from self.values
 
 class PlotData:
     def __init__(self, ax, save_time_second, **kwargs):
@@ -62,26 +66,22 @@ class PlotData:
 class ScatterData:
     def __init__(self, ax, save_time_second, **kwargs):
         self.ax = ax
-        self.x = TimeDeque(save_time_second=save_time_second)
-        self.sizes = TimeDeque(save_time_second=save_time_second)
+        self.values = TimeDeque(save_time_second=save_time_second)
         self.kwargs = kwargs
         self.line = None
         
     def append(self, x, y, size):
-        # TODO: x.append と sizes.append　の更新時刻が異なるため、
-        # x と sizes の大きさが異なるものになることがある
-        # たまにしか起こらないしエラーこそ出ないがsizesがおかしくなるので、
-        # 気になるなら self.x に((x, y), size) をappendする形式に変更する
-        self.x.append((x, y))
-        self.sizes.append(size)
+        self.values.append((x, y, size))
     
     def plot(self):
         if self.line is None:
-            if len(self.x) > 0:
-                self.line = self.ax.scatter(*np.transpose(self.x), s=self.sizes, **self.kwargs)
+            if len(self.values) > 0:
+                x, y, size = zip(*self.values)
+                self.line = self.ax.scatter(x, y, size, **self.kwargs)
         else:
-            self.line.set_offsets(self.x)
-            self.line.set_sizes(self.sizes)
+            x, y, size = zip(*self.values)
+            self.line.set_offsets(np.transpose([x, y]))
+            self.line.set_sizes(size)
             self.ax.update_datalim(self.line.get_datalim(self.ax.transData))
             
 class RealTimeDrawer(Figure):
