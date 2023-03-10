@@ -74,15 +74,14 @@ class ScatterData:
     
     def plot(self):
         self.values.refresh()
-        if self.line is None:
-            if len(self.values) > 0:
-                x, y, size = zip(*self.values)
-                self.line = self.ax.scatter(x, y, size, **self.kwargs)
-        else:
+        if len(self.values) > 0:
             x, y, size = zip(*self.values)
-            self.line.set_offsets(np.transpose([x, y]))
-            self.line.set_sizes(size)
-            self.ax.update_datalim(self.line.get_datalim(self.ax.transData))
+            if self.line is None:
+                    self.line = self.ax.scatter(x, y, size, **self.kwargs)
+            else:
+                self.line.set_offsets(np.transpose([x, y]))
+                self.line.set_sizes(size)
+                self.ax.update_datalim(self.line.get_datalim(self.ax.transData))
             
 class RealTimeDrawer(Figure):
     def __init__(self, blit=False):
