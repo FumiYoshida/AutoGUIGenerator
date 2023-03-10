@@ -43,7 +43,6 @@ class TimeDeque:
         return len(self.values)
     
     def __iter__(self):
-        self.refresh()
         yield from self.values
 
 class PlotData:
@@ -74,6 +73,7 @@ class ScatterData:
         self.values.append((x, y, size))
     
     def plot(self):
+        self.values.refresh()
         if self.line is None:
             if len(self.values) > 0:
                 x, y, size = zip(*self.values)
